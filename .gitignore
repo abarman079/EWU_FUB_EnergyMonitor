@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+energy_bems.db
+venv/
+env/
+.env
+.DS_Store

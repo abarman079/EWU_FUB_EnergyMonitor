@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUB BEMS - Building Energy Monitor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --black: #000000;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #2d2d2d;
+            --border-gray: #555555;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --accent-green: #00ff00;
+            --accent-red: #ff0000;
+            --accent-orange: #ff9500;
+        }
+        
+        body {
+            background: var(--black);
+            color: var(--white);
+            font-family: 'Courier New', 'Consolas', monospace;
+            line-height: 1.6;
+        }
+        
+        /* Navigation */
+        .navbar {
+            background: var(--dark-gray);
+            border-bottom: 2px solid var(--border-gray);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: var(--accent-green);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            color: var(--white);
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid var(--border-gray);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .nav-link:hover {
+            background: var(--white);
+            color: var(--black);
+            border-color: var(--white);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            border-left: 4px solid var(--white);
+            padding-left: 15px;
+            margin: 40px 0 20px 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-size: 0.85rem;
+            color: var(--off-white);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        select, input {
+            background: var(--black);
+            color: var(--white);
+            border: 1px solid var(--border-gray);
+            padding: 12px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--white);
+        }
+        
+        .btn {
+            background: var(--black);
+            color: var(--white);
+            border: 1px solid var(--border-gray);
+            padding: 12px 24px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: var(--white);
+            color: var(--black);
+            border-color: var(--white);
+        }
+        
+        /* Status Display */
+        .status-display {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status-text {
+            font-size: 0.9rem;
+            color: var(--off-white);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 15px 50px;
+            font-size: 2rem;
+            font-weight: bold;
+            border: 2px solid;
+            letter-spacing: 3px;
+        }
+        
+        .status-online {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        
+        .status-offline {
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-box {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 25px;
+            position: relative;
+        }
+        
+        .metric-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--white);
+        }
+        
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--off-white);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .metric-unit {
+            font-size: 0.9rem;
+            color: var(--off-white);
+        }
+        
+        /* Device Control */
+        .device-control {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-control {
+            padding: 15px 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-width: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .btn-pause {
+            background: var(--black);
+            color: var(--accent-orange);
+            border: 2px solid var(--accent-orange);
+        }
+        
+        .btn-pause:hover {
+            background: var(--accent-orange);
+            color: var(--black);
+        }
+        
+        .btn-resume {
+            background: var(--black);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+        }
+        
+        .btn-resume:hover {
+            background: var(--accent-green);
+            color: var(--black);
+        }
+        
+        /* Rooms Grid */
+        .rooms-container {
+            margin-bottom: 30px;
+        }
+        
+        .floor-section {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .floor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        .floor-title {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .floor-stats {
+            font-size: 0.85rem;
+            color: var(--off-white);
+        }
+        
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .room-card {
+            background: var(--black);
+            border: 1px solid var(--border-gray);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .room-card:hover {
+            border-color: var(--white);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+        
+        .room-card.online {
+            border-left: 4px solid var(--accent-green);
+        }
+        
+        .room-card.offline {
+            border-left: 4px solid var(--accent-red);
+            opacity: 0.6;
+        }
+        
+        .room-card.monitoring-off {
+            border-left: 4px solid var(--accent-orange);
+            opacity: 0.5;
+            border-style: dashed;
+        }
+        
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .room-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .room-toggle {
+            background: none;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px;
+        }
+        
+        .room-toggle:hover {
+            color: var(--accent-green);
+        }
+        
+        .room-power {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .room-status {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 8px;
+            border: 1px solid;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .room-status.online {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+        
+        .room-status.offline {
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+        
+        .room-course {
+            font-size: 0.8rem;
+            color: var(--off-white);
+            margin-top: 8px;
+        }
+        
+        .monitoring-badge {
+            font-size: 0.7rem;
+            color: var(--accent-orange);
+            border: 1px solid var(--accent-orange);
+            padding: 3px 6px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--off-white);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-gray);
+            margin-top: 50px;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .nav-link {
+                text-align: center;
+            }
+            
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .rooms-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-control {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>FUB ENERGY MONITOR</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Dashboard</a>
+                <a href="#" class="nav-link">Export Data</a>
+                <a href="#" class="nav-link">Manual</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> LOADING SYSTEM DATA...
+        </div>
+
+        <div id="dashboard-content" style="display: none;">
+            <!-- Control Panel -->
+            <div class="section-header">CONTROL PANEL</div>
+            <div class="control-panel">
+                <div class="control-grid">
+                    <div class="control-item">
+                        <label class="control-label">Filter Floor</label>
+                        <select id="floorFilter">
+                            <option value="all">All Floors</option>
+                            <option value="1">1st Floor</option>
+                            <option value="2">2nd Floor</option>
+                            <option value="3">3rd Floor</option>
+                            <option value="4">4th Floor</option>
+                            <option value="5">5th Floor</option>
+                            <option value="6">6th Floor</option>
+                            <option value="7">7th Floor</option>
+                            <option value="8">8th Floor</option>
+                            <option value="9">9th Floor</option>
+                            <option value="10">10th Floor</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">Status Filter</label>
+                        <select id="statusFilter">
+                            <option value="all">All Rooms</option>
+                            <option value="online">Online Only</option>
+                            <option value="offline">Offline Only</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">&nbsp;</label>
+                        <button class="btn" onclick="applyFilters()">[ APPLY FILTERS ]</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="section-header">SYSTEM STATUS</div>
+            <div class="status-display">
+                <div class="status-text">BUILDING MONITORING STATUS</div>
+                <span id="systemStatus" class="status-badge status-online">[ ACTIVE ]</span>
+            </div>
+
+            <!-- Real-Time Metrics -->
+            <div class="section-header">REAL-TIME METRICS</div>
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-label">Total Power</div>
+                    <div class="metric-value"><span id="totalPower">0</span></div>
+                    <div class="metric-unit">WATTS</div>
+                </div>
+                
+                <div class="metric-box">
+                    <div class="metric-label">Rooms Online</div>
+                    <div class="metric-value"><span id="roomsOnline">0/40</span></div>
+                    <div class="metric-unit">ACTIVE</div>
+                </div>
+                
+                <div class="metric-box">
+                    <div class="metric-label">Daily Energy</div>
+                    <div class="metric-value"><span id="dailyEnergy">0</span></div>
+                    <div class="metric-unit">kWh</div>
+                </div>
+                
+                <div class="metric-box">
+                    <div class="metric-label">Daily Cost</div>
+                    <div class="metric-value"><span id="dailyCost">0</span></div>
+                    <div class="metric-unit">BDT</div>
+                </div>
+                
+                <div class="metric-box">
+                    <div class="metric-label">CO₂ Emissions</div>
+                    <div class="metric-value"><span id="co2">0</span></div>
+                    <div class="metric-unit">kg</div>
+                </div>
+            </div>
+
+            <!-- Device Control -->
+            <div class="section-header">MONITORING CONTROL</div>
+            <div class="device-control">
+                <div class="control-buttons">
+                    <button id="btnPause" class="btn-control btn-pause" onclick="toggleMonitoring()">
+                        <i class="fas fa-pause"></i> PAUSE MONITORING
+                    </button>
+                </div>
+            </div>
+
+            <!-- Rooms Display -->
+            <div class="section-header">BUILDING ROOMS <span id="roomCount">(40 Total)</span></div>
+            <div id="roomsContainer" class="rooms-container"></div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p>FUB BUILDING ENERGY MANAGEMENT SYSTEM | CSE407 Green Computing Project</p>
+                <p>Real-time data updates every 5 seconds</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let monitoringEnabled = true;
+        let allRooms = [];
+        let currentFloorFilter = 'all';
+        let currentStatusFilter = 'all';
+        let refreshInterval;
+
+        async function fetchBuildingStatus() {
+            try {
+                const response = await fetch('/api/building/status');
+                const data = await response.json();
+
+                if (data.success) {
+                    allRooms = data.rooms;
+                    updateStats(data);
+                    renderRooms();
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('dashboard-content').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalPower').textContent = Math.round(data.total_power);
+            document.getElementById('roomsOnline').textContent = `${data.active_rooms}/${data.total_rooms}`;
+            document.getElementById('dailyEnergy').textContent = data.daily_energy.toFixed(2);
+            document.getElementById('dailyCost').textContent = data.daily_cost.toFixed(2);
+            document.getElementById('co2').textContent = data.co2_saved.toFixed(2);
+        }
+
+        function getFloorNumber(roomId) {
+            if (roomId.length === 4) {
+                return 10;
+            } else if (roomId.length === 3) {
+                return parseInt(roomId.charAt(0));
+            }
+            return 0;
+        }
+
+        function renderRooms() {
+            const container = document.getElementById('roomsContainer');
+            
+            // Filter rooms
+            let filteredRooms = allRooms.filter(room => {
+                const floor = getFloorNumber(room.room_id);
+                const floorMatch = currentFloorFilter === 'all' || floor === parseInt(currentFloorFilter);
+                const statusMatch = currentStatusFilter === 'all' || 
+                                  (currentStatusFilter === 'online' && room.is_active) ||
+                                  (currentStatusFilter === 'offline' && !room.is_active);
+                return floorMatch && statusMatch;
+            });
+
+            // Group by floor
+            const floors = {};
+            filteredRooms.forEach(room => {
+                const floor = getFloorNumber(room.room_id);
+                if (!floors[floor]) floors[floor] = [];
+                floors[floor].push(room);
+            });
+
+            const sortedFloors = Object.keys(floors).sort((a, b) => parseInt(a) - parseInt(b));
+
+            container.innerHTML = '';
+
+            if (sortedFloors.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:50px; color:#777;">NO ROOMS MATCH FILTERS</div>';
+                return;
+            }
+
+            sortedFloors.forEach(floorNum => {
+                const floorRooms = floors[floorNum];
+                const activeCount = floorRooms.filter(r => r.is_active).length;
+                const totalPower = floorRooms.reduce((sum, r) => sum + r.power, 0);
+
+                const floorSection = document.createElement('div');
+                floorSection.className = 'floor-section';
+
+                const ordinal = getOrdinal(parseInt(floorNum));
+
+                floorSection.innerHTML = `
+                    <div class="floor-header">
+                        <div class="floor-title">${ordinal} FLOOR</div>
+                        <div class="floor-stats">${activeCount}/${floorRooms.length} ACTIVE | ${Math.round(totalPower)}W</div>
+                    </div>
+                    <div class="rooms-grid" id="floor-${floorNum}"></div>
+                `;
+
+                container.appendChild(floorSection);
+
+                const roomsGrid = document.getElementById(`floor-${floorNum}`);
+
+                floorRooms.sort((a, b) => parseInt(a.room_id) - parseInt(b.room_id));
+
+                floorRooms.forEach(room => {
+                    const roomCard = document.createElement('div');
+                    let cardClass = `room-card ${room.is_active ? 'online' : 'offline'}`;
+                    if (!room.monitoring_enabled) {
+                        cardClass += ' monitoring-off';
+                    }
+                    roomCard.className = cardClass;
+
+                    let monitoringBadge = '';
+                    if (!room.monitoring_enabled) {
+                        monitoringBadge = '<div class="monitoring-badge">MONITORING OFF</div>';
+                    }
+
+                    let courseDisplay = '';
+                    if (room.course_name) {
+                        courseDisplay = `<div class="room-course">${room.course_code}</div>`;
+                    }
+
+                    const toggleIcon = room.monitoring_enabled ? 'fa-toggle-on' : 'fa-toggle-off';
+                    const toggleColor = room.monitoring_enabled ? 'color: #00ff00' : 'color: #ff0000';
+
+                    roomCard.innerHTML = `
+                        <div class="room-header">
+                            <div class="room-number">ROOM ${room.room_id}</div>
+                            <button class="room-toggle" onclick="toggleRoomMonitoring('${room.room_id}', event)" style="${toggleColor}">
+                                <i class="fas ${toggleIcon}"></i>
+                            </button>
+                        </div>
+                        <div class="room-power">${Math.round(room.power)}W</div>
+                        <div class="room-status ${room.is_active ? 'online' : 'offline'}">${room.status}</div>
+                        ${courseDisplay}
+                        ${monitoringBadge}
+                    `;
+
+                    roomCard.onclick = (e) => {
+                        if (!e.target.closest('.room-toggle')) {
+                            window.location.href = `/room/${room.room_id}`;
+                        }
+                    };
+
+                    roomsGrid.appendChild(roomCard);
+                });
+            });
+
+            document.getElementById('roomCount').textContent = `(${filteredRooms.length} Rooms)`;
+        }
+
+        function getOrdinal(num) {
+            const ordinals = ['', '1ST', '2ND', '3RD', '4TH', '5TH', '6TH', '7TH', '8TH', '9TH', '10TH'];
+            return ordinals[num] || `${num}TH`;
+        }
+
+        async function toggleMonitoring() {
+            try {
+                const response = await fetch('/api/monitoring/toggle', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    monitoringEnabled = data.monitoring_enabled;
+                    
+                    const btn = document.getElementById('btnPause');
+                    const status = document.getElementById('systemStatus');
+
+                    if (monitoringEnabled) {
+                        btn.innerHTML = '<i class="fas fa-pause"></i> PAUSE MONITORING';
+                        btn.className = 'btn-control btn-pause';
+                        status.textContent = '[ ACTIVE ]';
+                        status.className = 'status-badge status-online';
+                    } else {
+                        btn.innerHTML = '<i class="fas fa-play"></i> RESUME MONITORING';
+                        btn.className = 'btn-control btn-resume';
+                        status.textContent = '[ PAUSED ]';
+                        status.className = 'status-badge status-offline';
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling monitoring:', error);
+            }
+        }
+
+        async function toggleRoomMonitoring(roomId, event) {
+            event.stopPropagation();
+            try {
+                const response = await fetch(`/api/room/${roomId}/monitoring/toggle`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    fetchBuildingStatus();
+                }
+            } catch (error) {
+                console.error('Error toggling room monitoring:', error);
+            }
+        }
+
+        function applyFilters() {
+            currentFloorFilter = document.getElementById('floorFilter').value;
+            currentStatusFilter = document.getElementById('statusFilter').value;
+            renderRooms();
+        }
+
+        // Initial load
+        fetchBuildingStatus();
+
+        // Refresh every 5 seconds
+        refreshInterval = setInterval(fetchBuildingStatus, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room {{ room_id }} - FUB BEMS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --black: #000000;
+            --dark-gray: #1a1a1a;
+            --border-gray: #555555;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --accent-green: #00ff00;
+            --accent-red: #ff0000;
+        }
+        
+        body {
+            background: var(--black);
+            color: var(--white);
+            font-family: 'Courier New', 'Consolas', monospace;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: var(--dark-gray);
+            border-bottom: 2px solid var(--border-gray);
+            padding: 15px 30px;
+        }
+        
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .btn-back {
+            background: var(--black);
+            color: var(--white);
+            border: 1px solid var(--border-gray);
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-back:hover {
+            background: var(--white);
+            color: var(--black);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .section-header {
+            border-left: 4px solid var(--white);
+            padding-left: 15px;
+            margin: 40px 0 20px 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 25px;
+            position: relative;
+        }
+        
+        .info-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--white);
+        }
+        
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--off-white);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        
+        .info-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .info-unit {
+            font-size: 0.9rem;
+            color: var(--off-white);
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        canvas {
+            background: var(--black);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--off-white);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-gray);
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">ROOM {{ room_id }} DETAILS</div>
+            <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> BACK TO DASHBOARD</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section-header">REAL-TIME METRICS</div>
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Power Consumption</div>
+                <div class="info-value"><span id="power">0</span></div>
+                <div class="info-unit">WATTS</div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-label">Current Draw</div>
+                <div class="info-value"><span id="current">0</span></div>
+                <div class="info-unit">AMPERES</div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-label">Supply Voltage</div>
+                <div class="info-value"><span id="voltage">0</span></div>
+                <div class="info-unit">VOLTS</div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-label">Room Status</div>
+                <div class="info-value"><span id="status">--</span></div>
+                <div class="info-unit">STATE</div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-label">Daily Energy</div>
+                <div class="info-value"><span id="dailyEnergy">0</span></div>
+                <div class="info-unit">kWh</div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-label">Daily Cost</div>
+                <div class="info-value"><span id="dailyCost">0</span></div>
+                <div class="info-unit">BDT</div>
+            </div>
+        </div>
+
+        <div class="section-header">24-HOUR POWER PROFILE</div>
+        <div class="chart-container">
+            <div class="chart-title">Power Consumption History</div>
+            <canvas id="powerChart"></canvas>
+        </div>
+
+        <div class="section-header">ELECTRICAL PARAMETERS</div>
+        <div class="chart-container">
+            <div class="chart-title">Current & Voltage Analysis</div>
+            <canvas id="cvChart"></canvas>
+        </div>
+
+        <div class="section-header">ENERGY TREND</div>
+        <div class="chart-container">
+            <div class="chart-title">Hourly Energy Consumption</div>
+            <canvas id="energyChart"></canvas>
+        </div>
+
+        <div class="footer">
+            <p>FUB BUILDING ENERGY MANAGEMENT SYSTEM</p>
+            <p>Room monitoring updates every 5 seconds</p>
+        </div>
+    </div>
+
+    <script>
+        const roomId = '{{ room_id }}';
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff',
+                        font: { size: 12, family: 'Courier New' }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#f5f5f5', font: { family: 'Courier New' } },
+                    grid: { color: '#404040' }
+                },
+                y: {
+                    ticks: { color: '#f5f5f5', font: { family: 'Courier New' } },
+                    grid: { color: '#404040' }
+                }
+            }
+        };
+
+        const powerChart = new Chart(document.getElementById('powerChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Power (W)',
+                    data: [],
+                    borderColor: '#00ff00',
+                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: chartOptions
+        });
+
+        const cvChart = new Chart(document.getElementById('cvChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Current (A)',
+                        data: [],
+                        borderColor: '#ffffff',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Voltage (V)',
+                        data: [],
+                        borderColor: '#00ff00',
+                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                        borderWidth: 2,
+                        yAxisID: 'y1',
+                        tension: 0.2
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    x: chartOptions.scales.x,
+                    y: { ...chartOptions.scales.y, position: 'left' },
+                    y1: { ...chartOptions.scales.y, position: 'right', grid: { display: false } }
+                }
+            }
+        });
+
+        const energyChart = new Chart(document.getElementById('energyChart'), {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Energy (kWh)',
+                    data: [],
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+
+        async function fetchRoomStatus() {
+            try {
+                const response = await fetch(`/api/room/${roomId}/status`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('power').textContent = Math.round(data.power);
+                    document.getElementById('current').textContent = data.current.toFixed(2);
+                    document.getElementById('voltage').textContent = data.voltage.toFixed(1);
+                    document.getElementById('status').textContent = data.status;
+                    document.getElementById('dailyEnergy').textContent = data.daily_energy.toFixed(2);
+                    document.getElementById('dailyCost').textContent = data.daily_cost.toFixed(2);
+
+                    const time = new Date().toLocaleTimeString();
+                    powerChart.data.labels.push(time);
+                    powerChart.data.datasets[0].data.push(data.power);
+                    if (powerChart.data.labels.length > 50) {
+                        powerChart.data.labels.shift();
+                        powerChart.data.datasets[0].data.shift();
+                    }
+                    powerChart.update('none');
+
+                    cvChart.data.labels.push(time);
+                    cvChart.data.datasets[0].data.push(data.current);
+                    cvChart.data.datasets[1].data.push(data.voltage);
+                    if (cvChart.data.labels.length > 50) {
+                        cvChart.data.labels.shift();
+                        cvChart.data.datasets[0].data.shift();
+                        cvChart.data.datasets[1].data.shift();
+                    }
+                    cvChart.update('none');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/room/${roomId}/history`);
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    const hourlyData = {};
+                    data.data.forEach(point => {
+                        const hour = new Date(point.timestamp).getHours();
+                        if (!hourlyData[hour]) {
+                            hourlyData[hour] = { total: 0, count: 0 };
+                        }
+                        hourlyData[hour].total += point.power;
+                        hourlyData[hour].count++;
+                    });
+
+                    const hours = Object.keys(hourlyData).sort((a, b) => a - b);
+                    energyChart.data.labels = hours.map(h => `${h}:00`);
+                    energyChart.data.datasets[0].data = hours.map(h => 
+                        (hourlyData[h].total / hourlyData[h].count / 1000).toFixed(3)
+                    );
+                    energyChart.update();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        fetchRoomStatus();
+        loadHistory();
+        setInterval(fetchRoomStatus, 5000);
+    </script>
+</body>
+</html>

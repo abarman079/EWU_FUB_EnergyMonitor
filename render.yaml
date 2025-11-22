@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: fub-bems
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app_bems_black.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
